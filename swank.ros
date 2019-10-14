@@ -1,0 +1,25 @@
+#!/bin/sh
+/usr/sbin/sshd
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '(:swank) :silent t)
+  )
+
+(defpackage :ros.script.swank
+  (:use :cl))
+(in-package :ros.script.swank)
+
+(defvar *server* nil)
+
+(defun my-swank-stop ()
+  (swank:stop-server *server*))
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (setf *server* (swank:create-server :port 4005 :style :spawn :dont-close t))
+  (loop (sleep 60)))
+;;; vim: set ft=lisp lisp:

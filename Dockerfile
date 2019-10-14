@@ -1,19 +1,21 @@
-FROM centos
+FROM centos:8
 MAINTAINER @irix_jp
 
-# docker build --no-cache --rm -t irixjp/sbcl-swank:latest .
-# docker run -d -p 4005:4005 irixjp/supervisord:latest --name hoge irixjp/supervisord
+RUN dnf update -y && \
+    dnf install -y glibc-all-langpacks gcc make autoconf automake libcurl-devel zlib-devel git bzip2 which ncurses-devel && \
+    git clone -b release https://github.com/roswell/roswell.git && \
+    cd roswell  && \
+    sh bootstrap && \
+    ./configure && make && make install  && \
+    ros setup
 
-RUN yum update -y
-RUN yum install -y epel-release
-RUN yum install -y curl sbcl git supervisor
+RUN dnf install -y openssh-server passwd && \
+    /usr/bin/ssh-keygen -t rsa     -f /etc/ssh/ssh_host_rsa_key     -C '' -N '' && \
+    /usr/bin/ssh-keygen -t ecdsa   -f /etc/ssh/ssh_host_ecdsa_key   -C '' -N '' && \
+    /usr/bin/ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -C '' -N ''
 
-RUN cd /root && curl -O http://beta.quicklisp.org/quicklisp.lisp
-ADD install-quicklisp.lisp /root
-RUN cd /root && sbcl --script install-quicklisp.lisp
+COPY swank.ros /root
+COPY inits.sh /root
 
-ADD swank-load.lisp /root
-ADD supervisord.d/swank.ini /etc/supervisord.d
-
-EXPOSE 4005
-CMD supervisord -n
+EXPOSE 22
+CMD ["bash", "/root/inits.sh"]
