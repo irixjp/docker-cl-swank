@@ -1,5 +1,4 @@
 #!/bin/sh
-/usr/sbin/sshd
 #|-*- mode:lisp -*-|#
 #|
 exec ros -Q -- $0 "$@"
